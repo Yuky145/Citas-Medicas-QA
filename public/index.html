@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citas Médico Familiar</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body x-data="{ 
+  paciente: '', edad: 25, tieneRepresentante: false, medicoId: 1, fechaHora: '', mensaje: '', esError: false,
+  async agendar() {
+    try {
+      const res = await fetch('/api/citas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paciente: this.paciente,
+          edad: Number(this.edad),
+          tieneRepresentante: this.tieneRepresentante,
+          medicoId: Number(this.medicoId),
+          fechaHora: this.fechaHora
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        this.mensaje = `Cita creada (${data.categoria})`;
+        this.esError = false;
+      } else {
+        this.mensaje = `Error: ${data.error}`;
+        this.esError = true;
+      }
+    } catch (err) {
+      this.mensaje = 'Error de red. No se pudo conectar.';
+      this.esError = true;
+    }
+  }
+}">
+  <div class="container">
+    <h1>Agendar Cita Médica</h1>
+    <form @submit.prevent="agendar">
+      <input type="text" x-model="paciente" placeholder="Nombre del paciente" required />
+      
+      <input type="number" x-model="edad" placeholder="Edad" required />
+      
+      <!-- x-transition suaviza la aparición de este label -->
+      <label x-show="edad < 18" x-transition>
+        <input type="checkbox" x-model="tieneRepresentante" /> Cuenta con adulto responsable
+      </label>
+      
+      <input type="datetime-local" x-model="fechaHora" required />
+      
+      <button type="submit">Reservar</button>
+    </form>
+    
+    <!-- Muestra color verde o rojo dependiendo de si hay error -->
+    <p class="mensaje" x-show="mensaje !== ''" :class="esError ? 'mensaje-error' : 'mensaje-exito'" x-text="mensaje" x-transition></p>
+  </div>
+</body>
+</html>
